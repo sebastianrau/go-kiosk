@@ -10,7 +10,7 @@ desktop.ini
 
 
 # folder
-bin/
 coverage/
 config/
 vendor/
+build/
