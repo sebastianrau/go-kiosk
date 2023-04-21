@@ -46,6 +46,8 @@ func main() {
 		os.Exit(EXIT_NO_CONFIG)
 	}
 
+	cfg.LogPrintConfig()
+
 	// make sure the url has content
 	if cfg.Url == "" {
 		log.Panicf("No URL found")
@@ -60,7 +62,6 @@ func main() {
 	}
 	cfg.Url = url.String()
 
-	cfg.LogPrintConfig()
 	setEnvironment()
 
 	kiosk.Kiosk(&cfg)

@@ -22,7 +22,7 @@ func Kiosk(cfg *Config) {
 	log.Println("Using temp dir:", dir)
 	defer os.RemoveAll(dir)
 
-	opts := generateExecutorOptions(dir, cfg.WindowPosition, cfg.IgnoreCertificateErrors)
+	opts := generateExecutorOptions(dir, cfg)
 
 	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
 	defer cancel()
@@ -93,10 +93,11 @@ func loginApiTasks(cfg *Config) chromedp.Tasks {
 	}
 }
 
-func generateExecutorOptions(dir string, windowPosition string, ignoreCertificateErrors bool) []chromedp.ExecAllocatorOption {
+func generateExecutorOptions(dir string, c *Config) []chromedp.ExecAllocatorOption {
 	return []chromedp.ExecAllocatorOption{
 		chromedp.NoFirstRun,
 		chromedp.NoDefaultBrowserCheck,
+		chromedp.Flag("user-agent", "Mozilla/5.0 (X11; CrOS armv7l 13597.84.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"),
 		chromedp.Flag("noerrdialogs", true),
 		chromedp.Flag("kiosk", true),
 		chromedp.Flag("bwsi", true),
@@ -104,10 +105,12 @@ func generateExecutorOptions(dir string, windowPosition string, ignoreCertificat
 		chromedp.Flag("disable-sync", true),
 		chromedp.Flag("disable-notifications", true),
 		chromedp.Flag("disable-overlay-scrollbar", true),
-		chromedp.Flag("window-position", windowPosition),
+		chromedp.Flag("window-position", c.WindowPosition),
 		chromedp.Flag("check-for-update-interval", "31536000"),
-		chromedp.Flag("ignore-certificate-errors", ignoreCertificateErrors),
-		chromedp.Flag("test-type", ignoreCertificateErrors),
+		chromedp.Flag("ignore-certificate-errors", c.IgnoreCertificateErrors),
+		chromedp.Flag("test-type", c.IgnoreCertificateErrors),
+		chromedp.Flag("autoplay-policy", "no-user-gesture-required"),
+		//chromedp.Flag("window-size", cfg.WindowSize),
 		chromedp.UserDataDir(dir),
 	}
 }
