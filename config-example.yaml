@@ -1,0 +1,7 @@
+window-position: 0,0
+login-method: token
+# username: user #only for local login
+# password: changeme #only for local login
+URL: https://play.grafana.org
+ignore-certificate-errors: false
+key: aeaa-bbb-ccc-ddd

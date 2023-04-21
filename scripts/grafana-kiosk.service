@@ -1,0 +1,12 @@
+[Unit]
+Description=Kiosk Service
+After=network.target
+
+[Service]
+User=pi
+Environment="DISPLAY=:0"
+Environment="XAUTHORITY=/home/pi/.Xauthority"
+ExecStart=/usr/bin/grafana-kiosk -c config.yml
+
+[Install]
+WantedBy=graphical.target
