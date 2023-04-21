@@ -1,0 +1,14 @@
+[Unit]
+Description=Kiosk Service
+Documentation=https://github.com/SebastianRau/kiosk
+After=graphical.target
+
+[Service]
+User=kiosk
+Environment="DISPLAY=:0.0"
+Environment="XAUTHORITY=/home/kiosk/.Xauthority"
+
+ExecStart=/usr/bin/kiosk
+
+[Install]
+WantedBy=graphical.target
