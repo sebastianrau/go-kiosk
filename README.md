@@ -54,3 +54,24 @@ sudo systemctl enable kiosk
 sudo systemctl start kiosk
 sudo reboot
 ```
+
+
+**Screen resolution**
+create ```/usr/share/X11/xorg.conf.d/screen-resolution.conf``` and add
+```
+Section "Screen"
+Identifier "Screen0"
+Device "Card0"
+SubSection "Display"
+Modes "1920x1080"
+EndSubSection
+EndSection
+```
+
+**Screensaver and Screen blanking**
+create ```/user/kiosk/xinitrc``` and add
+```
+xset -dpms
+xset s off
+```
+ 
