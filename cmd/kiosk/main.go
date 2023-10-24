@@ -52,71 +52,64 @@ func setEnvironment() {
 	log.Println("XAUTHORITY=", xAuthorityEnv)
 }
 
-func CreateKeyFile(createKeyFiles string) {
-	if createKeyFiles != "" {
-		fmt.Println("Key will be generated")
+func createKeyFile(createKeyFiles string) {
 
-		keyPair, err := encryptedconfigvalue.AES.GenerateKeyPair()
-		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(-1)
-		}
+	fmt.Println("Key will be generated")
 
-		f, err := os.Create(createKeyFiles)
-		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(EXIT_KEY_GENERATION_FAIL)
-		}
-		defer f.Close()
-		f.Write([]byte(keyPair.EncryptionKey.ToSerializable()))
-
-		fmt.Println("Key generated.")
-		os.Exit(0)
-
+	keyPair, err := encryptedconfigvalue.AES.GenerateKeyPair()
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(-1)
 	}
+
+	f, err := os.Create(createKeyFiles)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(EXIT_KEY_GENERATION_FAIL)
+	}
+	defer f.Close()
+	f.Write([]byte(keyPair.EncryptionKey.ToSerializable()))
+
+	fmt.Println("Key generated.")
 }
 
-func EncryptString(encryptString string, encryptionKeyFile string) {
-	if encryptString != "" && encryptionKeyFile != "" {
-		fmt.Println("Encrypting:")
-		fmt.Println(encryptString)
+func encryptString(encryptString string, encryptionKeyFile string) {
 
-		fmt.Println("Read private key")
-		privateKeyFileBytes, err := os.ReadFile(encryptionKeyFile)
-		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(EXIT_PRIVATE_KEY_NOT_FOUND)
-		}
+	fmt.Println("Encrypting:")
+	fmt.Println(encryptString)
 
-		privateKey, err := encryptedconfigvalue.NewKeyWithType(string(privateKeyFileBytes))
-		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(EXIT_KEY_GENERATION_FAIL)
-		}
-
-		fmt.Println("Encrypt string")
-		encryptedVal, err := encryptedconfigvalue.AES.Encrypter().Encrypt(encryptString, privateKey)
-		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(EXIT_KEY_GENERATION_FAIL)
-		}
-
-		fmt.Println()
-		fmt.Println("${" + encryptedVal.ToSerializable() + "}")
-		fmt.Println()
-		os.Exit(0)
+	fmt.Println("Read private key")
+	privateKeyFileBytes, err := os.ReadFile(encryptionKeyFile)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(EXIT_PRIVATE_KEY_NOT_FOUND)
 	}
+
+	privateKey, err := encryptedconfigvalue.NewKeyWithType(string(privateKeyFileBytes))
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(EXIT_KEY_GENERATION_FAIL)
+	}
+
+	fmt.Println("Encrypt string")
+	encryptedVal, err := encryptedconfigvalue.AES.Encrypter().Encrypt(encryptString, privateKey)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(EXIT_KEY_GENERATION_FAIL)
+	}
+
+	fmt.Println()
+	fmt.Println("${" + encryptedVal.ToSerializable() + "}")
+	fmt.Println()
+
 }
 
-func CheckEncryption(configPath string) bool {
+func checkEncryption(configPath string) bool {
 	test, _ := os.ReadFile(configPath)
 	return encryptedconfigvalue.ContainsEncryptedConfigValueStringVars(test)
 }
 
 func DecryptConfig(cfg *kiosk.Config, encryptionKeyFile string) {
-	if encryptionKeyFile == "" {
-		encryptionKeyFile = fmt.Sprintf("%s/.kiosk/kiosk_id", getHomeDir())
-	}
 
 	log.Println("Read private key")
 	privateKeyFileBytes, err := os.ReadFile(encryptionKeyFile)
@@ -143,13 +136,24 @@ func getHomeDir() string {
 	return homedir
 }
 
+func checkPathes(configPath *string, encryptionKeyFile *string) {
+
+	if *configPath == "" {
+		*configPath = fmt.Sprintf("%s/.kiosk/config.yml", getHomeDir())
+	}
+
+	if *encryptionKeyFile == "" {
+		*encryptionKeyFile = fmt.Sprintf("%s/.kiosk/kiosk_id", getHomeDir())
+	}
+}
+
 func main() {
 
 	var (
 		configPath        = flag.String("c", "", "Path to configuration file (config.yaml)")
 		createKeyFiles    = flag.String("createKeys", "", "Generate a new AES Key Pair with given filename")
-		encryptString     = flag.String("s", "", "String to encrypt")
-		encryptionKeyFile = flag.String("k", "", "Encryption Key File")
+		stringToEncrypt   = flag.String("s", "", "String to encrypt")
+		encryptionKeyPath = flag.String("k", "", "Encryption Key File")
 	)
 	flag.Parse()
 
@@ -157,12 +161,19 @@ func main() {
 
 	log.Printf("Kiosk by SR (version: %s)\n", version)
 
-	CreateKeyFile(*createKeyFiles)
+	//Check if Pathes are given, else use home directory/.kiosk/
+	checkPathes(configPath, encryptionKeyPath)
 
-	EncryptString(*encryptString, *encryptionKeyFile)
+	// If create key files argument is given create a new keyfile and exit
+	if *createKeyFiles != "" {
+		createKeyFile(*createKeyFiles)
+		os.Exit(0)
+	}
 
-	if *configPath == "" {
-		*configPath = fmt.Sprintf("%s/.kiosk/config.yml", getHomeDir())
+	// Encrypt String argument is given. encrypt and exit
+	if *stringToEncrypt != "" && *encryptionKeyPath != "" {
+		encryptString(*stringToEncrypt, *encryptionKeyPath)
+		os.Exit(0)
 	}
 
 	if err := cleanenv.ReadConfig(*configPath, &cfg); err != nil {
@@ -170,9 +181,9 @@ func main() {
 		os.Exit(EXIT_NO_CONFIG)
 	}
 
-	if CheckEncryption(*configPath) {
+	if checkEncryption(*configPath) {
 		log.Println("Config file contains encrypted string")
-		DecryptConfig(&cfg, *encryptionKeyFile)
+		DecryptConfig(&cfg, *encryptionKeyPath)
 	}
 
 	cfg.LogPrintConfig()
