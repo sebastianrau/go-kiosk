@@ -14,3 +14,6 @@ coverage/
 config/
 vendor/
 build/
+
+# files
+kiosk_id
