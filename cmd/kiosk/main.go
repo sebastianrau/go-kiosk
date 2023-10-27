@@ -203,7 +203,6 @@ func main() {
 	cfg.Url = url.String()
 
 	setEnvironment()
-	os.Exit(0)
 	kiosk.Kiosk(&cfg)
 
 }

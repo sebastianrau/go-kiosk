@@ -12,7 +12,6 @@ import (
 	"github.com/chromedp/chromedp/kb"
 )
 
-// GrafanaKioskLocal creates a chrome-based kiosk using a local grafana-server account.
 func Kiosk(cfg *Config) {
 	dir, err := os.MkdirTemp(os.TempDir(), "chromedp-kiosk")
 	if err != nil {
@@ -27,11 +26,23 @@ func Kiosk(cfg *Config) {
 	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
 	defer cancel()
 
-	// also set up a custom logger
 	taskCtx, cancel := chromedp.NewContext(allocCtx, chromedp.WithLogf(log.Printf))
 	defer cancel()
 
-	//go listenChromeEvents(taskCtx, targetCrashed)
+	/*
+		chromedp.ListenBrowser(taskCtx, func(ev interface{}) {
+
+			fmt.Println("Event Fired")
+			if ev, ok := ev.(*target.EventTargetDestroyed); ok {
+				if c := chromedp.FromContext(taskCtx); c != nil {
+					if c.Target.TargetID == ev.TargetID {
+						log.Println("Window closed")
+						cancel()
+					}
+				}
+			}
+		})
+	*/
 
 	// ensure that the browser process is started
 	if err := chromedp.Run(taskCtx); err != nil {
@@ -60,6 +71,7 @@ func Kiosk(cfg *Config) {
 	if err != nil {
 		panic(err)
 	}
+
 }
 
 func loginNoneTasks(cfg *Config) chromedp.Tasks {
