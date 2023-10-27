@@ -56,21 +56,32 @@ func createKeyFile(createKeyFiles string) {
 
 	fmt.Println("Key will be generated")
 
-	keyPair, err := encryptedconfigvalue.AES.GenerateKeyPair()
+	keyPair, err := encryptedconfigvalue.RSA.GenerateKeyPair()
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(-1)
 	}
 
-	f, err := os.Create(createKeyFiles)
+	serializedPublicKey := keyPair.EncryptionKey.ToSerializable()
+	serializedPrivateKey := keyPair.DecryptionKey.ToSerializable()
+
+	f, err := os.Create(createKeyFiles + ".pup")
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(EXIT_KEY_GENERATION_FAIL)
 	}
-	defer f.Close()
-	f.Write([]byte(keyPair.EncryptionKey.ToSerializable()))
+	f.Write([]byte(serializedPublicKey))
+	f.Close()
 
-	fmt.Println("Key generated.")
+	f, err = os.Create(createKeyFiles)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(EXIT_KEY_GENERATION_FAIL)
+	}
+	f.Write([]byte(serializedPrivateKey))
+	f.Close()
+
+	fmt.Println("Keys generated.")
 }
 
 func encryptString(encryptString string, encryptionKeyFile string) {
@@ -79,20 +90,22 @@ func encryptString(encryptString string, encryptionKeyFile string) {
 	fmt.Println(encryptString)
 
 	fmt.Println("Read private key")
-	privateKeyFileBytes, err := os.ReadFile(encryptionKeyFile)
+	publicKeyFileBytes, err := os.ReadFile(encryptionKeyFile)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(EXIT_PRIVATE_KEY_NOT_FOUND)
 	}
 
-	privateKey, err := encryptedconfigvalue.NewKeyWithType(string(privateKeyFileBytes))
+	fmt.Println(string(publicKeyFileBytes))
+
+	privateKey, err := encryptedconfigvalue.NewKeyWithType(string(publicKeyFileBytes))
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(EXIT_KEY_GENERATION_FAIL)
 	}
 
 	fmt.Println("Encrypt string")
-	encryptedVal, err := encryptedconfigvalue.AES.Encrypter().Encrypt(encryptString, privateKey)
+	encryptedVal, err := encryptedconfigvalue.RSA.Encrypter().Encrypt(encryptString, privateKey)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(EXIT_KEY_GENERATION_FAIL)

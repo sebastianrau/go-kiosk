@@ -20,6 +20,8 @@ func (c *Config) LogPrintConfig() {
 	}
 	if c.Password != "" {
 		log.Printf("Password: %s", "*REDACTED*")
+		log.Printf("Password: %s", c.Password)
+
 	}
 	if c.Token != "" {
 		log.Printf("Token: %s", c.Token)
