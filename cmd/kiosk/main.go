@@ -65,7 +65,7 @@ func createKeyFile(createKeyFiles string) {
 	serializedPublicKey := keyPair.EncryptionKey.ToSerializable()
 	serializedPrivateKey := keyPair.DecryptionKey.ToSerializable()
 
-	f, err := os.Create(createKeyFiles + ".pup")
+	f, err := os.Create(createKeyFiles + ".pub")
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(EXIT_KEY_GENERATION_FAIL)
