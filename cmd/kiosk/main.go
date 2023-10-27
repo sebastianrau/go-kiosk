@@ -96,8 +96,6 @@ func encryptString(encryptString string, encryptionKeyFile string) {
 		os.Exit(EXIT_PRIVATE_KEY_NOT_FOUND)
 	}
 
-	fmt.Println(string(publicKeyFileBytes))
-
 	privateKey, err := encryptedconfigvalue.NewKeyWithType(string(publicKeyFileBytes))
 	if err != nil {
 		fmt.Println(err.Error())
