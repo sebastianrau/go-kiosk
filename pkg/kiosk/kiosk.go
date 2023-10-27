@@ -5,17 +5,20 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"time"
 
 	"github.com/chromedp/cdproto/network"
+	"github.com/chromedp/cdproto/target"
+
 	"github.com/chromedp/chromedp"
 	"github.com/chromedp/chromedp/kb"
 )
 
-func Kiosk(cfg *Config) {
+func Kiosk(cfg *Config) error {
 	dir, err := os.MkdirTemp(os.TempDir(), "chromedp-kiosk")
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	log.Println("Using temp dir:", dir)
@@ -29,24 +32,25 @@ func Kiosk(cfg *Config) {
 	taskCtx, cancel := chromedp.NewContext(allocCtx, chromedp.WithLogf(log.Printf))
 	defer cancel()
 
-	/*
-		chromedp.ListenBrowser(taskCtx, func(ev interface{}) {
+	chromedp.ListenBrowser(taskCtx, func(ev interface{}) {
 
-			fmt.Println("Event Fired")
-			if ev, ok := ev.(*target.EventTargetDestroyed); ok {
-				if c := chromedp.FromContext(taskCtx); c != nil {
-					if c.Target.TargetID == ev.TargetID {
-						log.Println("Window closed")
-						cancel()
-					}
+		switch ev := ev.(type) {
+		case *target.EventTargetDestroyed:
+			if c := chromedp.FromContext(taskCtx); c != nil {
+				if c.Target.TargetID == ev.TargetID {
+					log.Println("Window closed")
+					cancel()
 				}
 			}
-		})
-	*/
+		default:
+			log.Println("Event Fired: ", reflect.TypeOf(ev))
+		}
+
+	})
 
 	// ensure that the browser process is started
 	if err := chromedp.Run(taskCtx); err != nil {
-		panic(err)
+		return err
 	}
 
 	log.Println("Navigating to ", cfg.Url)
@@ -64,13 +68,15 @@ func Kiosk(cfg *Config) {
 		tasks = loginApiTasks(cfg)
 
 	default:
-		panic(fmt.Errorf("no login method found"))
+		return fmt.Errorf("no login method found")
 	}
 
 	err = chromedp.Run(taskCtx, tasks)
 	if err != nil {
-		panic(err)
+		return err
 	}
+
+	return nil
 
 }
 
