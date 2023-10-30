@@ -12,7 +12,7 @@ import (
 	"github.com/palantir/go-encrypted-config-value/encryptedconfigvalue"
 )
 
-var (
+const (
 	EXIT_NO_CONFIG             = 1
 	EXIT_NO_URL                = 2
 	EXIT_INVALID_URL           = 3
