@@ -214,6 +214,10 @@ func main() {
 	cfg.Url = url.String()
 
 	setEnvironment()
-	kiosk.Kiosk(&cfg)
+
+	err = kiosk.Kiosk(&cfg)
+	if err != nil {
+		log.Println(err.Error())
+	}
 
 }
